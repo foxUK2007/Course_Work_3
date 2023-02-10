@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import pro.sky.socksstorageapp.exceptions.ExceptionsApp;
 import pro.sky.socksstorageapp.model.Socks;
+import pro.sky.socksstorageapp.model.SocksColor;
+import pro.sky.socksstorageapp.model.SocksSize;
 import pro.sky.socksstorageapp.services.FileService;
 import pro.sky.socksstorageapp.services.SocksService;
 
@@ -16,6 +18,7 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -41,44 +44,69 @@ public class SocksServiceImpl implements SocksService {
     }
 
     @Override
-    public Socks getSocks(long id) throws ExceptionsApp {
-        if (listSocks.containsKey(id)) {
-            return listSocks.get(id);
-        } else {
-            throw new ExceptionsApp("Такой позиции носков не существует");
+    public int getSocks(SocksSize socksSize, SocksColor socksColor, Integer socksStructure, Integer quantity) throws ExceptionsApp {
+        int count = 0;
+        for (Map.Entry<Long, Socks> entry : listSocks.entrySet()) {
+            if (socksSize != null && !entry.getValue().getSocksSize().equals(socksSize)) {
+                continue;
+            }
+            if (socksColor != null && !entry.getValue().getSocksColor().equals(socksColor)) {
+                continue;
+            }
+            if (socksStructure != 0) {
+                continue;
+            }
+            if (quantity !=0) {
+                continue;
+            }
+            count += entry.getValue().getQuantity();
         }
+        return count;
     }
 
     @Override
     public long addSocks(Socks socks) throws ExceptionsApp {
-        if (!listSocks.containsValue(socks)) {
+        if (!listSocks.isEmpty() && listSocks.containsValue(socks)) {
+            for (Map.Entry<Long, Socks> entry : listSocks.entrySet()) {
+                if (entry.getValue().equals(socks)) {
+                    long key = entry.getKey();
+                    int oldQuantity = entry.getValue().getQuantity();
+                    int newQuantity = oldQuantity + socks.getQuantity();
+                    Socks socksNew = new Socks(socks.getSocksSize(), socks.getSocksColor(), socks.getSocksStructure(),
+                            newQuantity);
+                    listSocks.put(key, socksNew);
+                    saveToFile();
+                    return key;
+                }
+            }
+        } else {
             listSocks.put(id, socks);
             saveToFile();
-            return id++;
-        } else {
-            throw new ExceptionsApp("Такая позиция носков есть в списке");
         }
+        return id++;
     }
 
+
     @Override
-    public Socks editSocks(long id, Socks socks) throws ExceptionsApp {
-        if (listSocks.containsKey(id)) {
+    public boolean extraditeSocks(Socks socks) throws ExceptionsApp {
+        if (listSocks.containsKey(socks)) {
             listSocks.put(id, socks);
-            saveToFile();
-            return socks;
-        } else {
-            throw new ExceptionsApp("Такая позиция носков не найдена");
-        }
-    }
-
-    @Override
-    public boolean deleteSocks(long id) throws ExceptionsApp {
-        if (listSocks.containsKey(id)) {
-            listSocks.remove(id);
             saveToFile();
             return true;
         } else {
             throw new ExceptionsApp("Такая позиция носков не найдена");
+        }
+    }
+
+    @Override
+    public boolean deleteSocks(SocksSize socksSize, SocksColor socksColor, Integer socksStructure, Integer quantity) throws ExceptionsApp {
+        Socks socks = new Socks(socksSize, socksColor, socksStructure, quantity);
+        if (listSocks.containsKey(socks)) {
+            listSocks.remove(socks);
+            saveToFile();
+            return true;
+        } else {
+            throw new ExceptionsApp("Позиция носков удалена");
         }
     }
 

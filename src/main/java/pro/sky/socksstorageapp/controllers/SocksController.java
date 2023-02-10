@@ -11,6 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pro.sky.socksstorageapp.exceptions.ExceptionsApp;
 import pro.sky.socksstorageapp.model.Socks;
+import pro.sky.socksstorageapp.model.SocksColor;
+import pro.sky.socksstorageapp.model.SocksSize;
 import pro.sky.socksstorageapp.services.SocksService;
 
 import javax.validation.Valid;
@@ -48,10 +50,10 @@ public class SocksController {
         return ResponseEntity.ok(id);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{socks}")
     @Operation(
             summary = "Получение позиции носков",
-            description = "Получение позиции носков по порядковому номеру в списке")
+            description = "Для получения позиции носков необходимо указать размер, цвет, содержание хлопка и количество")
        @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
                     description = "Позиция носков выгружена"),
@@ -60,15 +62,23 @@ public class SocksController {
             @ApiResponse(responseCode = "500",
                     description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
-    public ResponseEntity<Socks> getSocks(@PathVariable @RequestParam(name = "Порядковый номер") long id) throws ExceptionsApp {
-        Socks socks = socksService.getSocks(id);
-        return ResponseEntity.ok(socks);
+    public ResponseEntity<Integer> getSocksQuantity(@RequestParam(name = "Размер")SocksSize socksSize,
+                                            @RequestParam(name = "Цвет")SocksColor socksColor,
+                                            @RequestParam(name = "Содержание хлопка") Integer socksStructure,
+                                            @RequestParam(name = "Количество") Integer quantity) throws ExceptionsApp {
+        Integer sumSocks = socksService.getSocks(socksSize, socksColor, socksStructure,
+                quantity);
+        if (quantity != 0) {
+            return ResponseEntity.ok().body(sumSocks);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping()
     @Operation(
-            summary = "Редактирование позиции носков",
-            description = "Редактирование позиции носков по порядковому номеру в списке")
+            summary = "Выдача позиции носков",
+            description = "Выдача позиции носков из списка")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
                     description = "Позиция носков отредактирована"),
@@ -77,13 +87,12 @@ public class SocksController {
             @ApiResponse(responseCode = "500",
                     description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
-    public ResponseEntity<Socks> editRecipe(@PathVariable @RequestParam(name = "Порядковый номер") long id,
-                                            @RequestBody Socks socks) throws ExceptionsApp {
-        Socks socks1 = socksService.editSocks(id, socks);
-        return ResponseEntity.ok(socks1);
+    public ResponseEntity<Boolean> extraditeSocks(@Valid @RequestBody Socks socks) throws ExceptionsApp {
+        socksService.extraditeSocks(socks);
+        return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping()
     @Operation(
             summary = "Удаление позиции носков",
             description = "Удаление позиции носков по порядковому номеру из списка")
@@ -95,8 +104,11 @@ public class SocksController {
             @ApiResponse(responseCode = "500",
                     description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
-    public ResponseEntity<Void> deleteSocks(@PathVariable @RequestParam(name = "Порядковый номер") long id) throws ExceptionsApp {
-        socksService.deleteSocks(id);
+    public ResponseEntity<Boolean> deleteSocks(@RequestParam(name = "Размер")SocksSize socksSize,
+                                            @RequestParam(name = "Цвет")SocksColor socksColor,
+                                            @RequestParam(name = "Содержание хлопка") Integer socksStructure,
+                                            @RequestParam(name = "Количество") Integer quantity) throws ExceptionsApp {
+        socksService.deleteSocks(socksSize, socksColor, socksStructure, quantity);
         return ResponseEntity.ok().build();
     }
 
