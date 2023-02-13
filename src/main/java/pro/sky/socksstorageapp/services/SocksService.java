@@ -19,7 +19,7 @@ public interface SocksService {
 
     boolean deleteSocks(SocksSize socksSize, SocksColor socksColor, Integer socksStructure, Integer quantity) throws ExceptionsApp;
 
-    Map<Long, Socks> getAllSocks();
+    Map<Long, Socks> getMapSocks();
 
     Path createSocksReport() throws IOException;
 

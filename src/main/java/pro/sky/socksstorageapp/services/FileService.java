@@ -6,13 +6,13 @@ import java.nio.file.Path;
 
 public interface FileService {
 
-    boolean saveToFile(String json, String dataFileName);
+    boolean saveToFile(String json);
 
-    String readeFromFile(String dataFileName);
+    String readeFromFile();
 
-    boolean cleanFile(String dataFileName);
+    boolean cleanFile();
 
-    File getDataFile(String dataNameFile);
+    File getDataFile();
 
     Path createTempFile(String suffix);
 }

@@ -15,11 +15,14 @@ public class FileServiceImpl implements FileService {
     @Value("${path.to.data.file}")
     private String dataFilePath;
 
+    @Value("${name.of.socks.data.file}")
+    private String dataFileName;
+
     @Override
-    public boolean saveToFile(String json, String dataFileName) {
+    public boolean saveToFile(String json) {
         Path path = Path.of(dataFilePath, dataFileName);
         try {
-            cleanFile(dataFileName);
+            cleanFile();
             Files.writeString(path, json);
             return true;
         } catch (IOException e) {
@@ -29,7 +32,7 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String readeFromFile(String dataFileName) {
+    public String readeFromFile() {
         Path path = Path.of(dataFilePath, dataFileName);
         try {
             return Files.readString(path);
@@ -39,11 +42,10 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public boolean cleanFile(String dataFileName) {
+    public boolean cleanFile() {
         try {
-            Path path = Path.of(dataFilePath, dataFileName);
-            Files.deleteIfExists(path);
-            Files.createFile(path);
+            Files.deleteIfExists(Path.of(dataFilePath, dataFileName));
+            Files.createFile(Path.of(dataFilePath, dataFileName));
             return true;
         } catch (IOException e) {
             e.printStackTrace();
@@ -52,8 +54,8 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public File getDataFile(String dataNameFile) {
-        return new File(dataFilePath + "/" + dataNameFile + ".json");
+    public File getDataFile() {
+        return new File(dataFilePath + "/" + dataFileName);
 
     }
 

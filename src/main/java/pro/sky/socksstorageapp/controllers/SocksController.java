@@ -50,7 +50,7 @@ public class SocksController {
         return ResponseEntity.ok(id);
     }
 
-    @GetMapping("/{socks}")
+    @GetMapping("/socks ")
     @Operation(
             summary = "Получение позиции носков",
             description = "Для получения позиции носков необходимо указать размер, цвет, содержание хлопка и количество")
@@ -125,7 +125,7 @@ public class SocksController {
                     description = "Произошла ошибка, не зависящая от вызывающей стороны")
     })
     public ResponseEntity<Map<Long, Socks>> getAllSocks() {
-        Map<Long, Socks> socksMap = socksService.getAllSocks();
+        Map<Long, Socks> socksMap = socksService.getMapSocks();
         if (socksMap != null) {
             return ResponseEntity.ok(socksMap);
         } else {

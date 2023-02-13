@@ -18,21 +18,17 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TreeMap;
 
 @Service
 public class SocksServiceImpl implements SocksService {
 
-    @Value("${name.of.socks.data.file}")
-    private String dataFileName;
-
     private final FileService fileService;
 
     public static long id = 1;
 
-    private Map<Long, Socks> listSocks = new TreeMap<>();
+    private Map<Long, Socks> mapSocks = new TreeMap<>();
 
     public SocksServiceImpl(FileService fileService) {
         this.fileService = fileService;
@@ -46,7 +42,7 @@ public class SocksServiceImpl implements SocksService {
     @Override
     public int getSocks(SocksSize socksSize, SocksColor socksColor, Integer socksStructure, Integer quantity) throws ExceptionsApp {
         int count = 0;
-        for (Map.Entry<Long, Socks> entry : listSocks.entrySet()) {
+        for (Map.Entry<Long, Socks> entry : mapSocks.entrySet()) {
             if (socksSize != null && !entry.getValue().getSocksSize().equals(socksSize)) {
                 continue;
             }
@@ -56,7 +52,7 @@ public class SocksServiceImpl implements SocksService {
             if (socksStructure != 0) {
                 continue;
             }
-            if (quantity !=0) {
+            if (quantity != 0) {
                 continue;
             }
             count += entry.getValue().getQuantity();
@@ -66,21 +62,21 @@ public class SocksServiceImpl implements SocksService {
 
     @Override
     public long addSocks(Socks socks) throws ExceptionsApp {
-        if (!listSocks.isEmpty() && listSocks.containsValue(socks)) {
-            for (Map.Entry<Long, Socks> entry : listSocks.entrySet()) {
+        if (!mapSocks.isEmpty() && mapSocks.containsValue(socks)) {
+            for (Map.Entry<Long, Socks> entry : mapSocks.entrySet()) {
                 if (entry.getValue().equals(socks)) {
                     long key = entry.getKey();
                     int oldQuantity = entry.getValue().getQuantity();
                     int newQuantity = oldQuantity + socks.getQuantity();
                     Socks socksNew = new Socks(socks.getSocksSize(), socks.getSocksColor(), socks.getSocksStructure(),
                             newQuantity);
-                    listSocks.put(key, socksNew);
+                    mapSocks.put(key, socksNew);
                     saveToFile();
                     return key;
                 }
             }
         } else {
-            listSocks.put(id, socks);
+            mapSocks.put(id, socks);
             saveToFile();
         }
         return id++;
@@ -89,8 +85,7 @@ public class SocksServiceImpl implements SocksService {
 
     @Override
     public boolean extraditeSocks(Socks socks) throws ExceptionsApp {
-        if (listSocks.containsKey(socks)) {
-            listSocks.put(id, socks);
+        if (isValueMapSocks(socks)) {
             saveToFile();
             return true;
         } else {
@@ -98,11 +93,31 @@ public class SocksServiceImpl implements SocksService {
         }
     }
 
+    private boolean isValueMapSocks(Socks socks) {
+        if (!mapSocks.isEmpty() && mapSocks.containsValue(socks)) {
+            for (Map.Entry<Long, Socks> entry : mapSocks.entrySet()) {
+                if (entry.getValue().equals(socks)) {
+                    long key = entry.getKey();
+                    int oldQuantity = entry.getValue().getQuantity();
+                    int newQuantity = socks.getQuantity();
+                    if (oldQuantity >= newQuantity) {
+                        int quantity = oldQuantity - newQuantity;
+                        Socks socksNew = new Socks(socks.getSocksSize(), socks.getSocksColor(), socks.getSocksStructure(),
+                                quantity);
+                        mapSocks.put(key, socksNew);
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public boolean deleteSocks(SocksSize socksSize, SocksColor socksColor, Integer socksStructure, Integer quantity) throws ExceptionsApp {
         Socks socks = new Socks(socksSize, socksColor, socksStructure, quantity);
-        if (listSocks.containsKey(socks)) {
-            listSocks.remove(socks);
+        if (mapSocks.containsKey(socks)) {
+            mapSocks.remove(socks);
             saveToFile();
             return true;
         } else {
@@ -110,15 +125,10 @@ public class SocksServiceImpl implements SocksService {
         }
     }
 
-    @Override
-    public Map<Long, Socks> getAllSocks() {
-        return listSocks;
-    }
-
     private void saveToFile() {
         try {
-            String json = new ObjectMapper().writeValueAsString(listSocks);
-            fileService.saveToFile(json, dataFileName);
+            String json = new ObjectMapper().writeValueAsString(mapSocks);
+            fileService.saveToFile(json);
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Ошибка сохранения файла");
         }
@@ -126,9 +136,9 @@ public class SocksServiceImpl implements SocksService {
     }
 
     private void readFromFile() {
-        String json = fileService.readeFromFile(dataFileName);
+        String json = fileService.readeFromFile();
         try {
-            listSocks = new ObjectMapper().readValue(json, new TypeReference<TreeMap<Long, Socks>>() {
+            mapSocks = new ObjectMapper().readValue(json, new TypeReference<TreeMap<Long, Socks>>() {
             });
         } catch (JsonProcessingException e) {
             throw new RuntimeException("Ошибка чтения файла");
@@ -136,9 +146,14 @@ public class SocksServiceImpl implements SocksService {
     }
 
     @Override
+    public Map<Long, Socks> getMapSocks() {
+        return Map.copyOf(mapSocks);
+    }
+
+    @Override
     public Path createSocksReport() throws IOException {
         Path path = fileService.createTempFile("socksReport");
-        for (Socks socks : listSocks.values()) {
+        for (Socks socks : mapSocks.values()) {
             try (Writer writer = Files.newBufferedWriter(path, StandardOpenOption.APPEND)) {
                 writer.append("Размер носков: " + socks.getSocksSize().getMinSize() + "-" + socks.getSocksSize().getMaxSize() + "\r\n")
                         .append("Цвет носков: " + socks.getSocksColor().getColor() + "\r\n")
