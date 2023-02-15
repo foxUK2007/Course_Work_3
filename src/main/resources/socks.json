@@ -1,0 +1,26 @@
+{
+  "1": {
+    "socksSize": "M",
+    "socksColor": "COLOR",
+    "socksStructure": 60,
+    "quantity": 25
+  },
+  "2": {
+    "socksSize": "L",
+    "socksColor": "WHITE",
+    "socksStructure": 70,
+    "quantity": 10
+  },
+  "3": {
+    "socksSize": "XS",
+    "socksColor": "WHITE",
+    "socksStructure": 90,
+    "quantity": 20
+  },
+  "4": {
+    "socksSize": "L",
+    "socksColor": "COLOR",
+    "socksStructure": 85,
+    "quantity": 30
+  }
+}
