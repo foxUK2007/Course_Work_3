@@ -116,7 +116,7 @@ public class SocksServiceImpl implements SocksService {
     @Override
     public boolean deleteSocks(SocksSize socksSize, SocksColor socksColor, Integer socksStructure, Integer quantity) throws ExceptionsApp {
         Socks socks = new Socks(socksSize, socksColor, socksStructure, quantity);
-        if (mapSocks.containsKey(socks)) {
+        if (isValueMapSocks(socks)) {
             mapSocks.remove(socks);
             saveToFile();
             return true;
